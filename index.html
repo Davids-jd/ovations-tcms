@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ovations — Training &amp; Certificate Management System</title>
+  <link rel="stylesheet" href="css/styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     LOGIN SCREEN
+═══════════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div id="login-box">
+    <div class="login-brand">
+      <div class="brand-dot"></div>
+      <div class="brand-name">Ovations</div>
+      <span class="brand-tag">TCMS</span>
+    </div>
+    <div class="login-title">Sign in to your portal</div>
+    <div class="login-sub">Training &amp; Certificate Management System</div>
+
+    <div class="login-field">
+      <label>Email address</label>
+      <input type="email" id="login-email" placeholder="yourname@ovations.co.za" autocomplete="username"/>
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="Enter your password"
+             autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()"/>
+    </div>
+    <div id="login-error">Incorrect email or password. Please try again.</div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+
+    <div class="login-hint">
+      <div class="login-hint-title">Demo Accounts — click to autofill</div>
+      <div class="login-cred-grid" id="hint-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TOP BAR
+═══════════════════════════════════════════════════════ -->
+<div id="topbar" style="display:none">
+  <div class="brand">
+    <div class="dot"></div>
+    Ovations
+    <span class="tag">TCMS</span>
+  </div>
+  <div class="spacer"></div>
+  <div class="row gap-3">
+    <button class="notif-btn" onclick="toggleNotifPanel()" title="Notifications">
+      🔔<span class="badge" id="notif-count">5</span>
+    </button>
+    <div class="user-info">
+      <div class="user-avatar" id="user-avatar"></div>
+      <span id="user-name" style="color:#fff;font-size:13px"></span>
+    </div>
+    <button class="signout-btn" onclick="doLogout()" title="Sign out">Sign out</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     NOTIFICATION PANEL
+═══════════════════════════════════════════════════════ -->
+<div id="notif-panel">
+  <h3>🔔 Notifications &amp; Alerts</h3>
+  <div id="notif-list"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL
+═══════════════════════════════════════════════════════ -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div id="modal">
+    <button class="modal-close" onclick="document.getElementById('modal-overlay').classList.remove('open')">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     APP LAYOUT
+═══════════════════════════════════════════════════════ -->
+<div id="layout" style="display:none">
+  <nav id="sidebar">
+    <div id="nav-menu"></div>
+  </nav>
+
+  <main id="content">
+
+    <!-- ── EXECUTIVE DASHBOARD ── -->
+    <section class="section" id="sec-executive">
+      <div class="page-title">Executive Dashboard</div>
+      <div class="page-sub">Company-wide training &amp; certification readiness, partner proficiency and risk overview.</div>
+      <div class="grid g-kpi mb-6" id="exec-kpis"></div>
+      <div class="grid g2 mb-6">
+        <div class="card"><div class="card-title">Active Credentials by Partner</div><div class="chart-wrap"><canvas id="chart-cred-by-partner"></canvas></div></div>
+        <div class="card"><div class="card-title">Month-on-Month Progression</div><div class="chart-wrap"><canvas id="chart-mom-trend"></canvas></div></div>
+      </div>
+      <div class="grid g2 mb-6">
+        <div class="card"><div class="card-title">Partner Credential Risk (RAG)</div><div id="exec-rag-table"></div></div>
+        <div class="card"><div class="card-title">Top 5 Employees — Credentials</div><div id="exec-top5"></div></div>
+      </div>
+      <div class="grid g2 mb-6">
+        <div class="card"><div class="card-title">Bottom 5 — Limited Activity</div><div id="exec-bottom5"></div></div>
+        <div class="card"><div class="card-title">Latest Credential Activity</div><div id="exec-latest-activity"></div></div>
+      </div>
+      <div class="card mb-6"><div class="card-title">Overall Company Readiness Across Partner Programmes</div><div id="exec-readiness-bars"></div></div>
+    </section>
+
+    <!-- ── CAREER COUNSELLOR (PCC) DASHBOARD ── -->
+    <section class="section" id="sec-pcc">
+      <div class="page-title">Career Counsellor (PCC) Dashboard</div>
+      <div class="page-sub">Manage your counselees' training progress, credentials and commitments.</div>
+      <div id="pcc-alerts" class="mb-4"></div>
+      <div class="filter-bar">
+        <input type="text" id="pcc-search" placeholder="🔍 Search employee…" oninput="renderPCCTable()"/>
+        <select id="pcc-filter-partner" onchange="renderPCCTable()">
+          <option value="">All Partners</option>
+          <option value="IBM">IBM</option><option value="AWS">AWS</option>
+          <option value="ATLASSIAN">Atlassian</option><option value="CAMUNDA">Camunda</option><option value="NINTEX">Nintex</option>
+        </select>
+        <select id="pcc-filter-status" onchange="renderPCCTable()">
+          <option value="">All Statuses</option>
+          <option value="expiring">Has Expiring</option><option value="expired">Has Expired</option><option value="missing">Has Gaps</option>
+        </select>
+      </div>
+      <div class="card mb-4">
+        <div class="card-title">My Counselees</div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Employee</th><th>Partner</th><th>Dept</th><th>Active</th><th>Expiring</th><th>Expired</th><th>Gaps</th><th>Commitments</th><th>Progress</th><th></th></tr></thead>
+          <tbody id="pcc-tbody"></tbody></table>
+        </div>
+      </div>
+      <div class="grid g2">
+        <div class="card"><div class="card-title">Credential Status Distribution</div><div class="chart-wrap"><canvas id="chart-pcc-cred"></canvas></div></div>
+        <div class="card"><div class="card-title">Commitment Status</div><div class="chart-wrap"><canvas id="chart-pcc-commit"></canvas></div></div>
+      </div>
+    </section>
+
+    <!-- ── EMPLOYEE / PERSONAL PORTAL ── -->
+    <section class="section" id="sec-employee">
+      <div class="page-title">My Learning &amp; Credential Portal</div>
+      <div class="page-sub">Your training, credentials, commitments and progress — all in one place.</div>
+      <div class="grid g4 mb-6" id="emp-kpis"></div>
+      <div id="emp-alerts" class="mb-4"></div>
+      <div class="grid g2 mb-6">
+        <div class="card"><div class="card-title">My Active Credentials</div><div id="emp-active-creds"></div></div>
+        <div class="card"><div class="card-title">Credential Gaps (Required for My Role / Partner)</div><div id="emp-gaps"></div></div>
+      </div>
+      <div class="grid g2 mb-6">
+        <div class="card"><div class="card-title">Training In Progress / Planned</div><div id="emp-training"></div></div>
+        <div class="card"><div class="card-title">My Commitments</div><div id="emp-commitments"></div></div>
+      </div>
+      <div class="grid g2 mb-6">
+        <div class="card"><div class="card-title">My Credential Progression</div><div class="chart-wrap"><canvas id="chart-emp-progress"></canvas></div></div>
+        <div class="card"><div class="card-title">Available Courses for My Partner</div><div id="emp-courses"></div></div>
+      </div>
+    </section>
+
+    <!-- ── L&D REPORTING ── -->
+    <section class="section" id="sec-ld">
+      <div class="page-title">L&amp;D Reporting — Quarterly Credential Tracker</div>
+      <div class="page-sub">Quarterly progress against targets, proficiency breakdown and gap analysis.</div>
+      <div class="filter-bar">
+        <select id="ld-filter-quarter"><option value="">All Quarters</option><option value="Q1 2025">Q1 2025</option><option value="Q2 2025">Q2 2025</option><option value="Q3 2025" selected>Q3 2025</option></select>
+        <select id="ld-filter-partner"><option value="">All Partners</option><option value="IBM">IBM</option><option value="AWS">AWS</option><option value="ATLASSIAN">Atlassian</option><option value="CAMUNDA">Camunda</option><option value="NINTEX">Nintex</option></select>
+        <select id="ld-filter-type"><option value="">All Credential Types</option><option value="Technical">Technical</option><option value="Sales">Sales</option><option value="Practitioner">Practitioner</option><option value="Foundational">Foundational</option></select>
+        <button class="btn btn-primary" onclick="renderLD()">Apply Filters</button>
+        <button class="btn btn-outline" onclick="exportLDReport()">⬇ Export CSV</button>
+      </div>
+      <div class="grid g4 mb-6" id="ld-kpis"></div>
+      <div class="grid g2 mb-6">
+        <div class="card"><div class="card-title">Target vs Achieved by Partner</div><div class="chart-wrap"><canvas id="chart-ld-quarterly"></canvas></div></div>
+        <div class="card"><div class="card-title">Credential Type Breakdown</div><div class="chart-wrap"><canvas id="chart-ld-types"></canvas></div></div>
+      </div>
+      <div class="card mb-6">
+        <div class="card-title">Quarterly Targets — Detail</div>
+        <div class="table-wrap"><table><thead><tr><th>Quarter</th><th>Partner</th><th>Type</th><th>Target</th><th>Achieved</th><th>Gap</th><th>Status</th></tr></thead><tbody id="ld-tbody"></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Employee Credential Detail (Proficiency-Relevant)</div>
+        <div class="table-wrap"><table><thead><tr><th>Employee</th><th>Partner</th><th>Credential</th><th>Category</th><th>Proficiency</th><th>Mandatory</th><th>Status</th><th>Expiry</th></tr></thead><tbody id="ld-emp-tbody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ── PARTNER RISK DASHBOARD ── -->
+    <section class="section" id="sec-partner">
+      <div class="page-title">Partner &amp; Vendor Risk Dashboard</div>
+      <div class="page-sub">Credential gaps, expiry risks and compliance status across all partner programmes.</div>
+      <div class="filter-bar">
+        <select id="pvr-filter-partner" onchange="renderPartnerRisk()"><option value="">All Partners</option><option value="IBM">IBM</option><option value="AWS">AWS</option><option value="ATLASSIAN">Atlassian</option><option value="CAMUNDA">Camunda</option><option value="NINTEX">Nintex</option></select>
+        <select id="pvr-filter-risk" onchange="renderPartnerRisk()"><option value="">All Risk Levels</option><option value="green">Green</option><option value="amber">Amber</option><option value="red">Red</option></select>
+        <button class="btn btn-outline" onclick="exportPartnerReport()">⬇ Export Partner Report</button>
+      </div>
+      <div class="grid g4 mb-6" id="pvr-kpis"></div>
+      <div class="card mb-6">
+        <div class="card-title">Partner Programme Requirements — Compliance Status</div>
+        <div class="table-wrap"><table><thead><tr><th>Partner</th><th>Credential</th><th>Required</th><th>Current</th><th>Gap</th><th>RAG</th><th>Notes</th></tr></thead><tbody id="pvr-req-tbody"></tbody></table></div>
+      </div>
+      <div class="grid g2 mb-6">
+        <div class="card"><div class="card-title">🔴 Expired Credentials</div><div id="pvr-expired"></div></div>
+        <div class="card"><div class="card-title">🟡 Expiring Within 90 Days</div><div id="pvr-expiring"></div></div>
+      </div>
+      <div class="card mb-6">
+        <div class="card-title">Partner Programme Requirements Configuration</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Configure minimum headcounts per partner. Changes update risk assessment in real time.</p>
+        <div id="pvr-config-table"></div>
+        <button class="btn btn-primary mt-4" onclick="openAddRequirementModal()">+ Add Requirement</button>
+      </div>
+    </section>
+
+    <!-- ── LEADERBOARDS & REPORTING ── -->
+    <section class="section" id="sec-leaderboard">
+      <div class="page-title">Leaderboards &amp; Reporting</div>
+      <div class="page-sub">Company-wide and partner-specific rankings, credential trends and risk reporting.</div>
+      <div class="filter-bar">
+        <select id="lb-filter-partner" onchange="renderLeaderboard()"><option value="">Company-Wide</option><option value="IBM">IBM</option><option value="AWS">AWS</option><option value="ATLASSIAN">Atlassian</option><option value="CAMUNDA">Camunda</option><option value="NINTEX">Nintex</option></select>
+        <select id="lb-filter-period" onchange="renderLeaderboard()"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="all">All Time</option></select>
+        <select id="lb-filter-type" onchange="renderLeaderboard()"><option value="">All Types</option><option value="Technical">Technical</option><option value="Sales">Sales</option><option value="Practitioner">Practitioner</option></select>
+      </div>
+      <div class="grid g2 mb-6">
+        <div class="card"><div class="card-title">🏆 Top 5 — Overall Credentials</div><div id="lb-top5"></div></div>
+        <div class="card"><div class="card-title">⚠️ Bottom 5 — Needs Attention</div><div id="lb-bottom5"></div></div>
+      </div>
+      <div class="grid g2 mb-6">
+        <div class="card"><div class="card-title">Technical vs Sales vs Practitioner</div><div class="chart-wrap"><canvas id="chart-lb-types"></canvas></div></div>
+        <div class="card"><div class="card-title">Credential Trend — 7-Month History</div><div class="chart-wrap"><canvas id="chart-lb-trend"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Full Employee Credential Ranking</div>
+        <div class="table-wrap"><table><thead><tr><th>#</th><th>Employee</th><th>Partner</th><th>Technical</th><th>Sales</th><th>Practitioner</th><th>Total</th><th>Expiring</th><th>Expired</th><th>RAG</th></tr></thead><tbody id="lb-tbody"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- ── NOTIFICATIONS & ALERTS ── -->
+    <section class="section" id="sec-notifications">
+      <div class="page-title">Notifications &amp; Alerts</div>
+      <div class="page-sub">Configurable alerts for credential expiry, gaps, commitments and partner risks.</div>
+      <div class="grid g2 mb-6">
+        <div class="card">
+          <div class="card-title">Notification Settings</div>
+          <table><thead><tr><th>Alert Type</th><th>Threshold</th><th>Enabled</th></tr></thead>
+          <tbody>
+            <tr><td>Credential Expiry Warning</td><td><input type="number" value="90" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px"/> days</td><td><input type="checkbox" checked/></td></tr>
+            <tr><td>Critical Expiry Alert</td><td><input type="number" value="30" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px"/> days</td><td><input type="checkbox" checked/></td></tr>
+            <tr><td>Missing Mandatory Credential</td><td>Immediate</td><td><input type="checkbox" checked/></td></tr>
+            <tr><td>Commitment Overdue</td><td>On due date</td><td><input type="checkbox" checked/></td></tr>
+            <tr><td>Partner Proficiency Gap</td><td><input type="number" value="80" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px"/>%</td><td><input type="checkbox" checked/></td></tr>
+            <tr><td>Quarterly Target Shortfall</td><td>End of quarter</td><td><input type="checkbox" checked/></td></tr>
+          </tbody></table>
+          <button class="btn btn-primary mt-4" onclick="alert('Settings saved (demo)')">Save Settings</button>
+        </div>
+        <div class="card"><div class="card-title">Active Alerts Summary</div><div id="notif-summary"></div></div>
+      </div>
+      <div class="card"><div class="card-title">All Active Notifications</div><div id="all-notifs"></div></div>
+    </section>
+
+    <!-- ── ADMINISTRATION ── -->
+    <section class="section" id="sec-admin">
+      <div class="page-title">Administration &amp; Data Management</div>
+      <div class="page-sub">Manage employees, credentials, partners and integration settings.</div>
+      <div class="grid g3 mb-6">
+        <div class="card"><div class="card-title">Employees</div><div style="font-size:32px;font-weight:700;margin-bottom:6px" id="admin-emp-count">12</div><div style="color:var(--muted);font-size:12px">Active employees tracked</div><button class="btn btn-outline mt-4 btn-sm">Manage Employees</button></div>
+        <div class="card"><div class="card-title">Credentials &amp; Badges</div><div style="font-size:32px;font-weight:700;margin-bottom:6px">15</div><div style="color:var(--muted);font-size:12px">Credential types configured</div><button class="btn btn-outline mt-4 btn-sm">Manage Credentials</button></div>
+        <div class="card"><div class="card-title">Partner Programmes</div><div style="font-size:32px;font-weight:700;margin-bottom:6px">5</div><div style="color:var(--muted);font-size:12px">Partners configured</div><button class="btn btn-outline mt-4 btn-sm">Manage Partners</button></div>
+      </div>
+      <div class="card mb-6">
+        <div class="card-title">Integration Readiness — Future API Connections</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Platform integration points for automated credential synchronisation.</p>
+        <div class="table-wrap"><table><thead><tr><th>Platform</th><th>Data Type</th><th>Status</th><th>Sync Method</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><strong>IBM Learning / Partner Plus</strong></td><td>eLearning, Credentials, Badges</td><td><span class="pill pill-amber">Ready to Configure</span></td><td>API / OAuth2</td><td><button class="btn btn-outline btn-sm">Configure</button></td></tr>
+          <tr><td><strong>AWS Partner Systems</strong></td><td>Certifications, Badges</td><td><span class="pill pill-amber">Ready to Configure</span></td><td>REST API</td><td><button class="btn btn-outline btn-sm">Configure</button></td></tr>
+          <tr><td><strong>Atlassian</strong></td><td>Certifications</td><td><span class="pill pill-gray">Planned</span></td><td>REST API</td><td><button class="btn btn-outline btn-sm">Configure</button></td></tr>
+          <tr><td><strong>Camunda</strong></td><td>Developer Certifications</td><td><span class="pill pill-gray">Planned</span></td><td>Webhook / API</td><td><button class="btn btn-outline btn-sm">Configure</button></td></tr>
+          <tr><td><strong>Nintex</strong></td><td>Automation Certifications</td><td><span class="pill pill-gray">Planned</span></td><td>REST API</td><td><button class="btn btn-outline btn-sm">Configure</button></td></tr>
+          <tr><td><strong>Credly</strong></td><td>Digital Badges (Open Badges)</td><td><span class="pill pill-gray">Planned</span></td><td>Credly API v2</td><td><button class="btn btn-outline btn-sm">Configure</button></td></tr>
+        </tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Career Counsellor Assignments</div>
+        <div class="table-wrap"><table><thead><tr><th>Career Counsellor</th><th>Counselees</th><th>Partners Covered</th><th></th></tr></thead><tbody id="admin-pcc-tbody"></tbody></table></div>
+      </div>
+    </section>
+
+  </main>
+</div><!-- /#layout -->
+
+<!-- ═══════════════════════════════════════════════════════
+     SCRIPTS  (load order matters: data → auth → render → app)
+═══════════════════════════════════════════════════════ -->
+<script src="js/data.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/render.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
